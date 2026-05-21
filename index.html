@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NotebookLM 使用預約</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f11; --surface: #1a1a1f; --surface2: #22222a; --border: #2e2e3a;
+  --accent: #7c6af7; --accent2: #5dd8c0; --warn: #f0a04b; --danger: #e05555;
+  --text: #e8e6f0; --muted: #7a7890; --pill-bg: #2a2838;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Noto Sans TC', sans-serif; min-height: 100vh; }
+
+/* IDENTITY */
+#id-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:2rem; }
+.id-logo { font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.2em; color:var(--accent); margin-bottom:2rem; }
+.id-title { font-size:26px; font-weight:700; margin-bottom:.4rem; text-align:center; }
+.id-sub { font-size:14px; color:var(--muted); margin-bottom:2.5rem; text-align:center; }
+.id-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:2rem; width:100%; max-width:420px; }
+.id-card h2 { font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:1.2rem; }
+.user-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:1.5rem; }
+.user-btn { background:var(--pill-bg); border:1.5px solid var(--border); border-radius:12px; padding:.9rem .5rem; cursor:pointer; transition:all .15s; display:flex; flex-direction:column; align-items:center; gap:7px; }
+.user-btn:hover,.user-btn.selected { border-color:var(--accent); background:#2e2a4a; }
+.avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:#fff; }
+.uname { font-size:12px; color:var(--muted); }
+.divider { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; margin-bottom:1.2rem; }
+.divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+.new-row { display:flex; gap:8px; }
+.new-row input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-family:'Noto Sans TC',sans-serif; font-size:14px; outline:none; }
+.new-row input:focus { border-color:var(--accent); }
+.new-row input::placeholder { color:var(--muted); }
+.btn { background:var(--accent); color:#fff; border:none; border-radius:8px; padding:10px 16px; font-size:14px; font-weight:500; cursor:pointer; font-family:inherit; transition:opacity .15s; }
+.btn:hover { opacity:.85; }
+.btn:disabled { opacity:.35; cursor:not-allowed; }
+.btn-full { width:100%; margin-top:1.5rem; padding:13px; font-size:15px; border-radius:12px; }
+
+/* LOADING OVERLAY */
+#loading { position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; gap:12px; }
+.spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-txt { font-size:13px; color:var(--muted); font-family:'Space Mono',monospace; }
+
+/* APP */
+#app { display:none; }
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:0 1.25rem; display:flex; align-items:center; justify-content:space-between; height:52px; position:sticky; top:0; z-index:100; }
+.tb-brand { font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.15em; color:var(--accent); }
+.tb-user { display:flex; align-items:center; gap:8px; cursor:pointer; padding:5px 10px; border-radius:8px; border:1px solid var(--border); transition:border-color .15s; }
+.tb-user:hover { border-color:var(--accent); }
+.tb-av { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; }
+.tb-name { font-size:13px; color:var(--muted); }
+.tabbar { display:flex; padding:1rem 1.25rem 0; border-bottom:1px solid var(--border); background:var(--surface); }
+.tab { padding:9px 18px; font-size:14px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; font-family:inherit; transition:all .15s; }
+.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab:hover:not(.active) { color:var(--text); }
+.content { padding:1.25rem; max-width:860px; margin:0 auto; }
+
+/* CALENDAR */
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+.cal-nav-btn { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); cursor:pointer; padding:6px 14px; font-size:14px; transition:border-color .15s; }
+.cal-nav-btn:hover { border-color:var(--accent); }
+.cal-month-label { font-family:'Space Mono',monospace; font-size:14px; letter-spacing:.1em; }
+.month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:1.5rem; }
+.dow { text-align:center; font-size:11px; color:var(--muted); font-family:'Space Mono',monospace; padding:6px 0; }
+.mday { aspect-ratio:1; border-radius:8px; background:var(--surface); border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:border-color .12s; padding:3px; }
+.mday:hover:not(.mday-empty):not(.mday-before) { border-color:var(--accent); }
+.mday.mday-empty { background:transparent; border-color:transparent; cursor:default; }
+.mday.mday-before { opacity:.3; cursor:not-allowed; }
+.mday.mday-today { border-color:var(--accent); }
+.mday.mday-selected { border-color:var(--accent); background:#2e2a4a; }
+.mday.mday-full { background:#2a1a1a !important; border-color:var(--danger) !important; }
+.mday-num { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); line-height:1; }
+.mday-used { font-family:'Space Mono',monospace; font-size:13px; font-weight:700; line-height:1; }
+.mday-dots { display:flex; gap:2px; flex-wrap:wrap; justify-content:center; margin-top:2px; }
+.mdot { width:5px; height:5px; border-radius:50%; }
+.mdot-x { font-size:8px; line-height:1; font-weight:700; }
+
+/* DAY PANEL */
+.day-panel { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.25rem; margin-bottom:1.5rem; }
+.day-panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.day-panel-date { font-family:'Space Mono',monospace; font-size:13px; color:var(--accent); }
+.day-panel-title { font-size:16px; font-weight:500; }
+.remain-badge { display:flex; flex-direction:column; align-items:center; background:var(--surface2); border-radius:10px; padding:8px 14px; }
+.remain-num { font-family:'Space Mono',monospace; font-size:22px; font-weight:700; line-height:1; }
+.remain-lbl { font-size:10px; color:var(--muted); letter-spacing:.08em; }
+.section-lbl { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.12em; color:var(--muted); text-transform:uppercase; margin-bottom:.75rem; }
+.chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:1rem; }
+.chip { padding:7px 14px; border-radius:18px; border:1.5px solid var(--border); background:var(--pill-bg); color:var(--muted); cursor:pointer; font-size:13px; font-family:'Space Mono',monospace; transition:all .12s; }
+.chip:hover { border-color:var(--accent); color:var(--text); }
+.chip.sel { border-color:var(--accent); background:#2e2a4a; color:var(--accent); font-weight:700; }
+.chip.no.sel { border-color:var(--danger); background:#3a1a1a; color:var(--danger); }
+.chip.maybe.sel { border-color:var(--warn); background:#3a2a10; color:var(--warn); }
+.log-btn { width:100%; padding:12px; font-size:14px; border-radius:10px; }
+.log-list { margin-top:1rem; }
+.log-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.log-item:last-child { border-bottom:none; }
+.log-av { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
+.log-meta { flex:1; }
+.log-uname { font-size:13px; font-weight:500; }
+.log-t { font-size:11px; color:var(--muted); font-family:'Space Mono',monospace; }
+.log-cnt { font-family:'Space Mono',monospace; font-size:14px; font-weight:700; }
+.log-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:4px; transition:color .12s; }
+.log-del:hover { color:var(--danger); }
+.empty-lbl { text-align:center; color:var(--muted); font-size:13px; padding:1.5rem 0; }
+
+/* WEEK */
+.stat-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; margin-bottom:1.25rem; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+.stat-v { font-size:22px; font-weight:700; font-family:'Space Mono',monospace; line-height:1.1; }
+.stat-l { font-size:11px; color:var(--muted); margin-top:3px; }
+.week-rows { display:grid; gap:6px; }
+.week-row { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; display:grid; grid-template-columns:64px 1fr 44px; align-items:center; gap:10px; cursor:pointer; transition:border-color .12s; }
+.week-row:hover { border-color:var(--accent); }
+.week-row.wr-today { border-color:var(--accent); }
+.week-row.wr-sel { border-color:var(--accent); background:#2e2a4a; }
+.wr-date { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); }
+.wr-bar-wrap { height:6px; background:var(--border); border-radius:3px; }
+.wr-bar { height:100%; border-radius:3px; transition:width .3s; }
+.wr-chips { display:flex; gap:3px; flex-wrap:wrap; margin-top:5px; }
+.wr-chip { display:flex; align-items:center; gap:3px; font-size:10px; font-family:'Space Mono',monospace; background:var(--pill-bg); border-radius:10px; padding:1px 7px; }
+.wr-dot { width:6px; height:6px; border-radius:50%; }
+.wr-rem { font-family:'Space Mono',monospace; font-size:12px; text-align:right; }
+
+.toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; padding:10px 22px; border-radius:22px; font-size:13px; font-weight:500; opacity:0; transition:opacity .2s; pointer-events:none; z-index:999; white-space:nowrap; }
+.toast.show { opacity:1; }
+
+@media (max-width:500px) {
+  .user-grid { grid-template-columns:repeat(2,1fr); }
+  .content { padding:1rem; }
+  .week-row { grid-template-columns:54px 1fr; }
+  .wr-rem { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-txt">載入中...</div>
+</div>
+
+<div id="id-screen" style="display:none">
+  <div class="id-logo">NOTEBOOKLM · CODA TRACKER</div>
+  <div class="id-title">你是誰？</div>
+  <div class="id-sub">每天共用 10 次 · 可預約未來使用量</div>
+  <div class="id-card">
+    <h2>選擇你的身份</h2>
+    <div class="user-grid" id="user-grid"></div>
+    <div class="divider">加入新成員</div>
+    <div class="new-row">
+      <input id="new-input" placeholder="輸入名字（如：之馨）" maxlength="10">
+      <button class="btn" onclick="addUser()">加入</button>
+    </div>
+    <button class="btn btn-full" id="enter-btn" onclick="enterApp()" disabled>進入 →</button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="tb-brand">NLM · CODA</div>
+    <div class="tb-user" onclick="goIdentity()">
+      <div class="tb-av" id="tb-av"></div>
+      <div class="tb-name" id="tb-name"></div>
+      <span style="font-size:11px;color:var(--muted)">▾</span>
+    </div>
+  </div>
+  <div class="tabbar">
+    <button class="tab active" onclick="switchTab('month',this)">月曆</button>
+    <button class="tab" onclick="switchTab('week',this)">本週</button>
+  </div>
+  <div class="content">
+
+    <div id="tab-month">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="moveMonth(-1)">‹ 上月</button>
+        <div class="cal-month-label" id="cal-label"></div>
+        <button class="cal-nav-btn" onclick="moveMonth(1)">下月 ›</button>
+      </div>
+      <div class="month-grid" id="month-grid"></div>
+      <div class="day-panel" id="day-panel" style="display:none">
+        <div class="day-panel-header">
+          <div>
+            <div class="day-panel-date" id="dp-date"></div>
+            <div class="day-panel-title">預約 / 記錄使用</div>
+          </div>
+          <div class="remain-badge">
+            <div class="remain-num" id="dp-rem">10</div>
+            <div class="remain-lbl">剩餘額度</div>
+          </div>
+        </div>
+        <div class="section-lbl">我預計使用幾次？</div>
+        <div class="chips" id="dp-chips"></div>
+        <button class="btn log-btn" id="dp-btn" onclick="submitLog()" disabled>記錄</button>
+        <div class="log-list" id="dp-list"></div>
+      </div>
+    </div>
+
+    <div id="tab-week" style="display:none">
+      <div class="cal-nav" style="margin-bottom:1rem">
+        <button class="cal-nav-btn" onclick="moveWeek(-1)">‹ 上週</button>
+        <div class="cal-month-label" id="wk-label"></div>
+        <button class="cal-nav-btn" onclick="moveWeek(1)">下週 ›</button>
+      </div>
+      <div class="stat-row" id="wk-stats"></div>
+      <div class="section-lbl" style="margin-bottom:.75rem">點擊日期查看 / 編輯</div>
+      <div class="week-rows" id="wk-rows"></div>
+      <div class="day-panel" id="wk-day-panel" style="display:none;margin-top:1rem">
+        <div class="day-panel-header">
+          <div>
+            <div class="day-panel-date" id="wdp-date"></div>
+            <div class="day-panel-title">預約 / 記錄使用</div>
+          </div>
+          <div class="remain-badge">
+            <div class="remain-num" id="wdp-rem">10</div>
+            <div class="remain-lbl">剩餘額度</div>
+          </div>
+        </div>
+        <div class="section-lbl">我預計使用幾次？</div>
+        <div class="chips" id="wdp-chips"></div>
+        <button class="btn log-btn" id="wdp-btn" onclick="submitLogWeek()" disabled>記錄</button>
+        <div class="log-list" id="wdp-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const START = '2025-05-21';
+const LIMIT = 10;
+const COLORS = ['#7c6af7','#5dd8c0','#f0a04b','#e05555','#a78bfa','#34d399'];
+
+// ── STATE ──
+// users: [{id, name}]
+// logs: { 'YYYY-MM-DD': [{id, user_id, count, logged_at}] }
+// cur: current user id
+let users = [];
+let logs = {};   // keyed by date, cached locally
+let curUser = null;
+let calYear, calMonth;
+let selDate = null;
+let selDateW = null;
+let selCount = null;
+let selCountW = null;
+let weekOffset = 0;
+
+// ── HELPERS ──
+function today() { return new Date().toISOString().split('T')[0]; }
+function uc(i) { return COLORS[i%COLORS.length]; }
+function uchar(name) { return name ? name.slice(-1) : '?'; }
+function uidx(uid) { return users.findIndex(u=>u.id===uid); }
+function fmt(key) { const d=new Date(key+'T00:00:00'); return (d.getMonth()+1)+'/'+d.getDate(); }
+function dayName(key) { const days=['日','一','二','三','四','五','六']; return '週'+days[new Date(key+'T00:00:00').getDay()]; }
+function getLogsForDate(key) { return logs[key] || []; }
+function getUsed(key) { return getLogsForDate(key).filter(l=>l.count>0).reduce((a,b)=>a+b.count,0); }
+function getRemaining(key) { return Math.max(0, LIMIT - getUsed(key)); }
+
+function saveCur() { localStorage.setItem('nlm_cur', curUser||''); }
+function loadCur() { curUser = localStorage.getItem('nlm_cur')||null; }
+
+// ── API ──
+async function apiFetch(path, method='GET', body=null) {
+  const opts = { method, headers:{'Content-Type':'application/json'} };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function fetchUsers() {
+  users = await apiFetch('/api/users');
+}
+
+async function fetchLogs(dateKeys) {
+  // fetch all logs for given date keys in parallel
+  const results = await Promise.all(dateKeys.map(d => apiFetch(`/api/logs?date=${d}`)));
+  dateKeys.forEach((d,i) => { logs[d] = results[i]; });
+}
+
+async function fetchLogsRange(startKey, endKey) {
+  // fetch all logs and filter client-side — simpler for small datasets
+  const all = await apiFetch('/api/logs');
+  // rebuild cache
+  all.forEach(log => {
+    if(!logs[log.date]) logs[log.date] = [];
+    // avoid duplicates in cache
+    if(!logs[log.date].find(l=>l.id===log.id)) logs[log.date].push(log);
+  });
+}
+
+// ── BOOT ──
+async function boot() {
+  loadCur();
+  try {
+    await fetchUsers();
+    // prefetch current month logs
+    await fetchLogsRange();
+  } catch(e) {
+    showToast('⚠ 無法連線，請重新整理');
+  }
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('id-screen').style.display = 'flex';
+  renderID();
+}
+
+// ── IDENTITY ──
+function renderID() {
+  const g = document.getElementById('user-grid');
+  g.innerHTML = '';
+  users.forEach((u,i) => {
+    const b = document.createElement('button');
+    b.className = 'user-btn'+(curUser===u.id?' selected':'');
+    b.innerHTML = `<div class="avatar" style="background:${uc(i)}">${uchar(u.name)}</div><div class="uname">${u.name}</div>`;
+    b.onclick = () => { curUser=u.id; saveCur(); renderID(); };
+    g.appendChild(b);
+  });
+  document.getElementById('enter-btn').disabled = !curUser;
+}
+
+async function addUser() {
+  const inp = document.getElementById('new-input');
+  const name = inp.value.trim(); if(!name) return;
+  const id = 'u'+Date.now();
+  showLoading('加入中...');
+  try {
+    await apiFetch('/api/users', 'POST', {id, name});
+    users.push({id, name});
+    curUser = id; saveCur(); inp.value='';
+    renderID();
+  } catch(e) { showToast('⚠ 加入失敗'); }
+  hideLoading();
+}
+
+function enterApp() {
+  if(!curUser) return;
+  document.getElementById('id-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const n = new Date(); calYear=n.getFullYear(); calMonth=n.getMonth();
+  selDate = today(); initApp();
+}
+
+function goIdentity() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('id-screen').style.display = 'flex';
+  renderID();
+}
+
+// ── APP ──
+function initApp() {
+  const u = users.find(x=>x.id===curUser);
+  const i = uidx(curUser);
+  document.getElementById('tb-av').textContent = uchar(u.name);
+  document.getElementById('tb-av').style.background = uc(i);
+  document.getElementById('tb-name').textContent = u.name;
+  renderCal(); openDayPanel(selDate);
+}
+
+// ── CALENDAR ──
+function moveMonth(d) { calMonth+=d; if(calMonth<0){calMonth=11;calYear--;} if(calMonth>11){calMonth=0;calYear++;} renderCal(); }
+
+function renderCal() {
+  const t = today();
+  document.getElementById('cal-label').textContent = calYear+'年 '+(calMonth+1)+'月';
+  const grid = document.getElementById('month-grid');
+  grid.innerHTML = '';
+  ['日','一','二','三','四','五','六'].forEach(d=>{ grid.innerHTML+=`<div class="dow">${d}</div>`; });
+  const first = new Date(calYear,calMonth,1).getDay();
+  const days = new Date(calYear,calMonth+1,0).getDate();
+  for(let i=0;i<first;i++) grid.innerHTML+='<div class="mday mday-empty"></div>';
+  for(let d=1;d<=days;d++){
+    const key=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const used=getUsed(key), rem=getRemaining(key);
+    const isBefore=key<START, isToday=key===t, isSel=key===selDate;
+    let cls='mday';
+    if(isBefore) cls+=' mday-before';
+    if(isToday) cls+=' mday-today';
+    if(isSel) cls+=' mday-selected';
+    if(rem===0&&used>0) cls+=' mday-full';
+    let usedColor='var(--text)';
+    if(used>0){ if(rem<=2) usedColor='var(--danger)'; else if(rem<=5) usedColor='var(--warn)'; else usedColor='var(--accent2)'; }
+    const userMap={};
+    getLogsForDate(key).forEach(l=>{ if(!userMap[l.user_id]||l.count>0) userMap[l.user_id]=l.count; });
+    const dots=Object.keys(userMap).map(uid=>{
+      const cnt=userMap[uid], i=uidx(uid);
+      if(cnt===0) return `<div class="mdot-x" style="color:${uc(i)}">✕</div>`;
+      if(cnt===-1) return `<div class="mdot-x" style="color:${uc(i)};opacity:.7">–</div>`;
+      return `<div class="mdot" style="background:${uc(i)}"></div>`;
+    }).join('');
+    const div=document.createElement('div');
+    div.className=cls;
+    div.innerHTML=`<div class="mday-num">${d}</div>${key>=START&&used>0?`<div class="mday-used" style="color:${usedColor}">${used}</div>`:''}<div class="mday-dots">${dots}</div>`;
+    if(!isBefore) div.onclick=()=>{ selDate=key; renderCal(); openDayPanel(key); };
+    grid.appendChild(div);
+  }
+}
+
+function openDayPanel(key) {
+  if(!key||key<START) return;
+  const panel = document.getElementById('day-panel');
+  panel.style.display='block';
+  const t = today();
+  const label = key===t?'今天 · ':key>t?'預約 · ':'過去 · ';
+  document.getElementById('dp-date').textContent = label+fmt(key)+' '+dayName(key);
+  renderDpRem(key); renderDpChips(key); renderDpList(key);
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderDpRem(key) {
+  const r=getRemaining(key), el=document.getElementById('dp-rem');
+  el.textContent=r;
+  el.style.color=r<=2?'var(--danger)':r<=5?'var(--warn)':'var(--accent2)';
+}
+
+function renderDpChips(key) {
+  selCount=null; document.getElementById('dp-btn').disabled=true;
+  const c=document.getElementById('dp-chips'); c.innerHTML='';
+  const rem=getRemaining(key);
+  for(let i=1;i<=10;i++){
+    const over=i>rem;
+    const chip=document.createElement('button');
+    chip.className='chip'; chip.textContent=i; chip.disabled=over;
+    chip.style.opacity=over?'.25':'1'; chip.style.cursor=over?'not-allowed':'pointer';
+    chip.title=over?'超出剩餘額度 ('+rem+')':'';
+    if(!over) chip.onclick=()=>{ selCount=i; renderDpChipsState(); };
+    c.appendChild(chip);
+  }
+  const no=document.createElement('button'); no.className='chip no'; no.textContent='不使用';
+  no.onclick=()=>{ selCount=0; renderDpChipsState(); }; c.appendChild(no);
+  const mb=document.createElement('button'); mb.className='chip maybe'; mb.textContent='不確定';
+  mb.onclick=()=>{ selCount=-1; renderDpChipsState(); }; c.appendChild(mb);
+}
+
+function renderDpChipsState() {
+  const chips=document.querySelectorAll('#dp-chips .chip'); let i=0;
+  for(let n=1;n<=10;n++){ chips[i].className='chip'+(selCount===n?' sel':''); i++; }
+  chips[i].className='chip no'+(selCount===0?' sel':''); i++;
+  chips[i].className='chip maybe'+(selCount===-1?' sel':'');
+  document.getElementById('dp-btn').disabled=selCount===null;
+}
+
+async function submitLog() {
+  if(selCount===null||!selDate) return;
+  const key=selDate;
+  if(selCount>0&&selCount>getRemaining(key)){ showToast('⚠ 超出剩餘額度！'); return; }
+  document.getElementById('dp-btn').disabled=true;
+  const now=new Date();
+  const logged_at=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  try {
+    const newLog = await apiFetch('/api/logs','POST',{user_id:curUser,date:key,count:selCount,logged_at});
+    if(!logs[key]) logs[key]=[];
+    logs[key].push(newLog);
+    selCount=null;
+    renderDpRem(key); renderDpChips(key); renderDpList(key); renderCal();
+    showToast('已記錄 ✓');
+  } catch(e) { showToast('⚠ 記錄失敗'); document.getElementById('dp-btn').disabled=false; }
+}
+
+function renderDpList(key) {
+  const logList=getLogsForDate(key), el=document.getElementById('dp-list');
+  if(!logList.length){ el.innerHTML='<div class="empty-lbl">這天還沒有記錄</div>'; return; }
+  el.innerHTML='';
+  logList.slice().reverse().forEach(log=>{
+    const u=users.find(x=>x.id===log.user_id); if(!u) return;
+    const i=uidx(log.user_id);
+    let cnt,col;
+    if(log.count===0){cnt='不使用';col='var(--danger)';}
+    else if(log.count===-1){cnt='不確定';col='var(--warn)';}
+    else{cnt='+'+log.count;col='var(--accent2)';}
+    const item=document.createElement('div'); item.className='log-item';
+    item.innerHTML=`<div class="log-av" style="background:${uc(i)}">${uchar(u.name)}</div>
+      <div class="log-meta"><div class="log-uname">${u.name}</div><div class="log-t">${log.logged_at||''}</div></div>
+      <div class="log-cnt" style="color:${col}">${cnt}</div>
+      <button class="log-del" title="刪除" onclick="delLog('${key}',${log.id})">×</button>`;
+    el.appendChild(item);
+  });
+}
+
+async function delLog(key, id) {
+  try {
+    await apiFetch(`/api/logs?id=${id}`,'DELETE');
+    logs[key] = (logs[key]||[]).filter(l=>l.id!==id);
+    renderDpRem(key); renderDpChips(key); renderDpList(key); renderCal();
+    showToast('已刪除');
+  } catch(e) { showToast('⚠ 刪除失敗'); }
+}
+
+// ── WEEK ──
+function switchTab(tab,btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-month').style.display=tab==='month'?'':'none';
+  document.getElementById('tab-week').style.display=tab==='week'?'':'none';
+  if(tab==='week') renderWeek();
+}
+
+function moveWeek(d){ weekOffset+=d; selDateW=null; document.getElementById('wk-day-panel').style.display='none'; renderWeek(); }
+
+function getWeekDays() {
+  const t=new Date(); t.setDate(t.getDate()+weekOffset*7);
+  const dow=t.getDay(), days=[];
+  for(let i=-dow;i<=6-dow;i++){
+    const d=new Date(t); d.setDate(t.getDate()+i);
+    const k=d.toISOString().split('T')[0];
+    if(k>=START) days.push(k);
+  }
+  return days;
+}
+
+function renderWeek() {
+  const days=getWeekDays(), t=today();
+  if(days.length){
+    const fl=new Date(days[0]+'T00:00:00'), ll=new Date(days[days.length-1]+'T00:00:00');
+    const lbl=(fl.getMonth()+1)+'/'+(fl.getDate())+' — '+(ll.getMonth()+1)+'/'+(ll.getDate());
+    const wlbl=document.getElementById('wk-label');
+    if(wlbl) wlbl.textContent=(weekOffset===0?'本週  ':weekOffset>0?'+'+weekOffset+'週  ':weekOffset+'週  ')+lbl;
+  }
+  let totalUsed=0, bestDay=0; const userTotals={};
+  days.forEach(d=>{ const u=getUsed(d); totalUsed+=u; bestDay=Math.max(bestDay,u);
+    getLogsForDate(d).forEach(l=>{ if(l.count>0) userTotals[l.user_id]=(userTotals[l.user_id]||0)+l.count; }); });
+  const pastDays=days.filter(d=>d<=t).length;
+  let topUser='—', topCnt=0;
+  Object.entries(userTotals).forEach(([uid,cnt])=>{ if(cnt>topCnt){topCnt=cnt;const u=users.find(x=>x.id===uid);topUser=u?uchar(u.name)+'('+cnt+')':'—';} });
+  document.getElementById('wk-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-v">${totalUsed}</div><div class="stat-l">這週已用</div></div>
+    <div class="stat-card"><div class="stat-v">${Math.max(0,pastDays*LIMIT-totalUsed)}</div><div class="stat-l">這週已剩</div></div>
+    <div class="stat-card"><div class="stat-v">${bestDay}</div><div class="stat-l">單日最多</div></div>
+    <div class="stat-card"><div class="stat-v" style="font-size:16px">${topUser}</div><div class="stat-l">使用最多</div></div>`;
+  const rows=document.getElementById('wk-rows'); rows.innerHTML='';
+  days.forEach(d=>{
+    const used=getUsed(d), rem=getRemaining(d), pct=(used/LIMIT)*100;
+    const isToday=d===t, isSel=d===selDateW;
+    const barColor=rem<=2?'var(--danger)':rem<=5?'var(--warn)':'var(--accent)';
+    const userMap={};
+    getLogsForDate(d).forEach(l=>{ if(l.count>0) userMap[l.user_id]=(userMap[l.user_id]||0)+l.count; });
+    const chipsHtml=Object.entries(userMap).map(([uid,cnt])=>{
+      const u=users.find(x=>x.id===uid); if(!u) return '';
+      return `<div class="wr-chip"><div class="wr-dot" style="background:${uc(uidx(uid))}"></div>${uchar(u.name)}:${cnt}</div>`;
+    }).join('');
+    const row=document.createElement('div');
+    row.className='week-row'+(isToday?' wr-today':'')+(isSel?' wr-sel':'');
+    row.innerHTML=`
+      <div class="wr-date"><div>${dayName(d)}</div><div style="font-size:10px;margin-top:2px">${fmt(d)}</div></div>
+      <div><div class="wr-bar-wrap"><div class="wr-bar" style="width:${pct}%;background:${barColor}"></div></div>
+      <div class="wr-chips">${chipsHtml}</div></div>
+      <div class="wr-rem" style="color:${barColor}">${rem}</div>`;
+    row.onclick=()=>{ selDateW=d; renderWeek(); openWeekDayPanel(d); };
+    rows.appendChild(row);
+  });
+}
+
+function openWeekDayPanel(key) {
+  const panel=document.getElementById('wk-day-panel'); panel.style.display='block';
+  const t=today(), label=key===t?'今天 · ':key>t?'預約 · ':'過去 · ';
+  document.getElementById('wdp-date').textContent=label+fmt(key)+' '+dayName(key);
+  renderWdpRem(key); renderWdpChips(key); renderWdpList(key);
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderWdpRem(key) {
+  const r=getRemaining(key), el=document.getElementById('wdp-rem');
+  el.textContent=r; el.style.color=r<=2?'var(--danger)':r<=5?'var(--warn)':'var(--accent2)';
+}
+
+function renderWdpChips(key) {
+  selCountW=null; document.getElementById('wdp-btn').disabled=true;
+  const c=document.getElementById('wdp-chips'); c.innerHTML='';
+  const rem=getRemaining(key);
+  for(let i=1;i<=10;i++){
+    const over=i>rem;
+    const chip=document.createElement('button'); chip.className='chip'; chip.textContent=i;
+    chip.disabled=over; chip.style.opacity=over?'.25':'1'; chip.style.cursor=over?'not-allowed':'pointer';
+    chip.title=over?'超出剩餘額度 ('+rem+')':'';
+    if(!over) chip.onclick=()=>{ selCountW=i; renderWdpChipsState(); };
+    c.appendChild(chip);
+  }
+  const no=document.createElement('button'); no.className='chip no'; no.textContent='不使用';
+  no.onclick=()=>{ selCountW=0; renderWdpChipsState(); }; c.appendChild(no);
+  const mb=document.createElement('button'); mb.className='chip maybe'; mb.textContent='不確定';
+  mb.onclick=()=>{ selCountW=-1; renderWdpChipsState(); }; c.appendChild(mb);
+}
+
+function renderWdpChipsState() {
+  const chips=document.querySelectorAll('#wdp-chips .chip'); let i=0;
+  for(let n=1;n<=10;n++){ chips[i].className='chip'+(selCountW===n?' sel':''); i++; }
+  chips[i].className='chip no'+(selCountW===0?' sel':''); i++;
+  chips[i].className='chip maybe'+(selCountW===-1?' sel':'');
+  document.getElementById('wdp-btn').disabled=selCountW===null;
+}
+
+async function submitLogWeek() {
+  if(selCountW===null||!selDateW) return;
+  const key=selDateW;
+  if(selCountW>0&&selCountW>getRemaining(key)){ showToast('⚠ 超出剩餘額度！'); return; }
+  document.getElementById('wdp-btn').disabled=true;
+  const now=new Date();
+  const logged_at=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  try {
+    const newLog=await apiFetch('/api/logs','POST',{user_id:curUser,date:key,count:selCountW,logged_at});
+    if(!logs[key]) logs[key]=[];
+    logs[key].push(newLog);
+    selCountW=null;
+    renderWdpRem(key); renderWdpChips(key); renderWdpList(key); renderWeek();
+    showToast('已記錄 ✓');
+  } catch(e) { showToast('⚠ 記錄失敗'); document.getElementById('wdp-btn').disabled=false; }
+}
+
+function renderWdpList(key) {
+  const logList=getLogsForDate(key), el=document.getElementById('wdp-list');
+  if(!logList.length){ el.innerHTML='<div class="empty-lbl">這天還沒有記錄</div>'; return; }
+  el.innerHTML='';
+  logList.slice().reverse().forEach(log=>{
+    const u=users.find(x=>x.id===log.user_id); if(!u) return;
+    const i=uidx(log.user_id);
+    let cnt,col;
+    if(log.count===0){cnt='不使用';col='var(--danger)';}
+    else if(log.count===-1){cnt='不確定';col='var(--warn)';}
+    else{cnt='+'+log.count;col='var(--accent2)';}
+    const item=document.createElement('div'); item.className='log-item';
+    item.innerHTML=`<div class="log-av" style="background:${uc(i)}">${uchar(u.name)}</div>
+      <div class="log-meta"><div class="log-uname">${u.name}</div><div class="log-t">${log.logged_at||''}</div></div>
+      <div class="log-cnt" style="color:${col}">${cnt}</div>
+      <button class="log-del" title="刪除" onclick="delLogW('${key}',${log.id})">×</button>`;
+    el.appendChild(item);
+  });
+}
+
+async function delLogW(key, id) {
+  try {
+    await apiFetch(`/api/logs?id=${id}`,'DELETE');
+    logs[key]=(logs[key]||[]).filter(l=>l.id!==id);
+    renderWdpRem(key); renderWdpChips(key); renderWdpList(key); renderWeek();
+    showToast('已刪除');
+  } catch(e) { showToast('⚠ 刪除失敗'); }
+}
+
+// ── UTILS ──
+function showLoading(txt='載入中...') { const l=document.getElementById('loading'); l.querySelector('.loading-txt').textContent=txt; l.style.display='flex'; }
+function hideLoading() { document.getElementById('loading').style.display='none'; }
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+
+document.getElementById('new-input').addEventListener('keydown',e=>{ if(e.key==='Enter') addUser(); });
+boot();
+</script>
+</body>
+</html>
