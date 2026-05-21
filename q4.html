@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>伊甸的命令 — 創世記二章深度系列</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;700;900&family=Noto+Sans+TC:wght@300;400;500&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --gold:            #C9A84C;
+  --gold-light:      #E8D5A3;
+  --gold-dim:        #8B6914;
+  --ink:             #1A1208;
+  --parchment:       #F7F0E3;
+  --parchment-dark:  #EDE3CC;
+  --thread-red:      #8B1A1A;
+  --thread-red-light:#C44040;
+  --smoke:           #6B6355;
+  --cream:           #FAF6EE;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--ink);
+  font-family: 'Noto Serif TC', serif;
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(201,168,76,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(139,26,26,0.06) 0%, transparent 50%),
+    repeating-linear-gradient(0deg, transparent, transparent 80px, rgba(201,168,76,0.015) 80px, rgba(201,168,76,0.015) 81px),
+    repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(201,168,76,0.015) 80px, rgba(201,168,76,0.015) 81px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.site-header {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 80px 24px 60px;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+}
+
+.site-header .eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.site-header h1 {
+  font-size: clamp(32px, 6vw, 64px);
+  font-weight: 900;
+  color: var(--parchment);
+  line-height: 1.2;
+  margin-bottom: 16px;
+  text-shadow: 0 0 60px rgba(201,168,76,0.3);
+}
+
+.site-header h1 span { color: var(--gold); }
+
+.site-header .subtitle {
+  font-size: 15px;
+  color: rgba(247,240,227,0.5);
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.thread-line {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 5;
+}
+.thread-line::after {
+  content: '';
+  width: 2px;
+  height: 48px;
+  background: linear-gradient(to bottom, rgba(201,168,76,0.6), rgba(139,26,26,0.4));
+  display: block;
+}
+
+.chapter {
+  position: relative;
+  z-index: 5;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.card {
+  background: var(--parchment);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.4),
+    0 20px 60px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 30px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
+}
+.card.gold::before   { background: linear-gradient(to bottom, var(--gold), var(--gold-dim)); }
+.card.red::before    { background: linear-gradient(to bottom, var(--thread-red-light), var(--thread-red)); }
+.card.deep::before   { background: linear-gradient(to bottom, #4A7A5C, #2D5240); }
+.card.blue::before   { background: linear-gradient(to bottom, #4A6A9A, #2D4A7A); }
+.card.purple::before { background: linear-gradient(to bottom, #7A4A9A, #4A2D7A); }
+.card.final::before  { background: linear-gradient(135deg, var(--gold), var(--thread-red-light), var(--gold)); }
+
+.card.final {
+  background: linear-gradient(160deg, #1A1208 0%, #2A1E10 100%);
+}
+.card.final .card-title           { color: var(--gold); }
+.card.final .card-body p          { color: rgba(247,240,227,0.85); }
+.card.final .scripture-text       { color: var(--gold-light); }
+.card.final .scripture-ref        { color: rgba(201,168,76,0.6); }
+.card.final .scripture::before,
+.card.final .scripture::after     { background: rgba(201,168,76,0.15); }
+.card.final .big-quote            { color: var(--gold-light); }
+.card.final .chapter-tag          { color: var(--gold-light); opacity: 0.5; }
+.card.final .highlight            { background: rgba(201,168,76,0.08); color: var(--gold-light); border-color: var(--gold); }
+.card.final .highlight strong     { color: rgba(201,168,76,0.5); }
+
+.card-header {
+  padding: 32px 36px 24px 44px;
+  border-bottom: 1px solid rgba(26,18,8,0.08);
+  position: relative;
+}
+
+.chapter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  opacity: 0.6;
+  color: var(--ink);
+}
+.chapter-tag .num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--parchment);
+}
+.card.gold   .chapter-tag .num { background: var(--gold-dim); }
+.card.red    .chapter-tag .num { background: var(--thread-red); }
+.card.deep   .chapter-tag .num { background: #2D5240; }
+.card.blue   .chapter-tag .num { background: #2D4A7A; }
+.card.purple .chapter-tag .num { background: #4A2D7A; }
+.card.final  .chapter-tag .num { background: var(--ink); }
+
+.card-title {
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.card-hook {
+  font-size: 14px;
+  color: var(--smoke);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.card-body {
+  padding: 28px 36px 32px 44px;
+}
+.card-body p {
+  font-size: 15px;
+  line-height: 1.95;
+  color: #2A2010;
+  margin-bottom: 16px;
+  font-weight: 400;
+}
+.card-body p:last-child { margin-bottom: 0; }
+
+.highlight {
+  background: var(--parchment-dark);
+  border-left: 3px solid;
+  padding: 16px 20px;
+  margin: 20px 0;
+  border-radius: 0 3px 3px 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #1A1208;
+}
+.card.gold   .highlight { border-color: var(--gold); }
+.card.red    .highlight { border-color: var(--thread-red-light); }
+.card.deep   .highlight { border-color: #4A7A5C; }
+.card.blue   .highlight { border-color: #4A6A9A; }
+.card.purple .highlight { border-color: #7A4A9A; }
+.card.final  .highlight { border-color: var(--gold); }
+
+.highlight strong {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 6px;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+
+.scripture {
+  text-align: center;
+  padding: 20px 24px;
+  margin: 20px 0;
+  position: relative;
+}
+.scripture::before, .scripture::after {
+  content: '';
+  position: absolute;
+  left: 40px; right: 40px;
+  height: 1px;
+  background: rgba(26,18,8,0.12);
+}
+.scripture::before { top: 0; }
+.scripture::after  { bottom: 0; }
+.scripture-text {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.7;
+  font-style: italic;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.scripture-ref {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--smoke);
+  text-transform: uppercase;
+}
+
+.analogy {
+  background: linear-gradient(135deg, rgba(201,168,76,0.08), rgba(201,168,76,0.03));
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.85;
+  color: #3A2A10;
+  font-style: italic;
+}
+.analogy-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.big-quote {
+  text-align: center;
+  padding: 28px 20px;
+  font-size: clamp(17px, 3vw, 22px);
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--ink);
+  position: relative;
+}
+.big-quote::before {
+  content: '\201C';
+  font-size: 80px;
+  color: rgba(201,168,76,0.2);
+  position: absolute;
+  top: -10px; left: 16px;
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+.big-quote cite {
+  display: block;
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 2px;
+  color: var(--smoke);
+  margin-top: 12px;
+  font-family: 'Cinzel', serif;
+}
+
+.term-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+}
+.term-original {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  flex-shrink: 0;
+  min-width: 110px;
+}
+.term-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--smoke);
+}
+
+.depth-label {
+  display: inline-block;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.depth-label.deep-tag  { background: rgba(26,18,8,0.08);    color: var(--smoke); }
+.depth-label.plain-tag { background: rgba(201,168,76,0.15); color: var(--gold-dim); }
+
+.concentric { display: flex; flex-direction: column; gap: 4px; margin: 20px 0; }
+.concentric-ring {
+  padding: 12px 16px 12px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  position: relative;
+}
+.concentric-ring .ring-label {
+  font-weight: 700;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 2px;
+}
+.r1 { background: rgba(201,168,76,0.15);  border-left: 4px solid var(--gold); }
+.r2 { background: rgba(139,26,26,0.08);   border-left: 4px solid var(--thread-red-light); }
+.r3 { background: rgba(74,106,154,0.08);  border-left: 4px solid #4A6A9A; }
+.r4 { background: rgba(74,122,92,0.08);   border-left: 4px solid #4A7A5C; }
+.r5 { background: rgba(122,74,154,0.08);  border-left: 4px solid #7A4A9A; }
+
+.card-divider {
+  height: 1px;
+  background: rgba(26,18,8,0.08);
+  margin: 20px 0;
+}
+
+.section-gap { height: 8px; }
+
+.site-footer {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  padding: 60px 24px 80px;
+  color: rgba(247,240,227,0.25);
+  font-size: 12px;
+  letter-spacing: 2px;
+  font-family: 'Cinzel', serif;
+}
+
+@media (max-width: 480px) {
+  .card-header, .card-body { padding-left: 28px; padding-right: 20px; }
+}
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="eyebrow">創世記二章深度系列 · Genesis II Series</div>
+  <h1>伊甸的<span>命令</span></h1>
+  <p class="subtitle">上帝對亞當說的那幾句話，藏著整部救贖史的密碼</p>
+</header>
+
+
+<!-- ══ 第一章：分享 ══ -->
+<div class="thread-line"></div>
+
+<div class="chapter">
+  <div class="card gold">
+
+    <div class="card-header">
+      <div class="chapter-tag"><span class="num">1</span> Opening · 分享</div>
+      <h2 class="card-title">那一天，上帝對人說了什麼？</h2>
+      <p class="card-hook">在一切尚未破碎之前，伊甸園裡有一場對話——那是人類史上第一道命令，也是第一份愛的誓言。</p>
+    </div>
+
+    <div class="card-body">
+
+      <p>你有沒有試過，在某一個安靜的夜晚，把聖經翻到創世記第二章，然後慢慢讀到第十五節？</p>
+
+      <p>「耶和華神將那人安置在伊甸園，使他修理，看守。」</p>
+
+      <p>然後繼續往下，讀到第十六節、十七節——上帝的第一道明確命令，第一條禁令，也是第一個應許的隱影。</p>
+
+      <div class="scripture">
+        <p class="scripture-text">「園中各樣樹上的果子，你可以隨意吃，只是分別善惡樹上的果子，你不可吃，因為你吃的日子必定死。」</p>
+        <p class="scripture-ref">創世記 二：16–17</p>
+      </div>
+
+      <p>我第一次讀到這段話的時候，直覺反應是：上帝給了人類那麼大一座園子，偏偏設了一條禁令，感覺有點……像在故意設陷阱。</p>
+
+      <p>但後來我越研究，越覺得自己完全讀錯了方向。這段話不是陷阱，而是一份含義深到讓人窒息的神聖委任狀——祂在說的，是身份、是信任、是整部救贖史最底層的那塊基石。</p>
+
+      <div class="highlight">
+        <strong>這個系列想帶你做的事</strong>
+        接下來六篇，我們要一起從希伯來原文、古代近東背景、聖殿神學與救贖歷史，把這幾節經文「打開」來看——看見那些藏在文字背後、改變一切的真相。
+      </div>
+
+      <div class="analogy">
+        <span class="analogy-icon">📜</span>
+        想像你手上拿著一封信，紙面上只有幾行字。但當你舉起來對著光源透視，你看見了水印、看見了隱藏的圖案——那才是這封信真正想說的話。創世記二章，就是這樣一封信。
+      </div>
+
+      <p>準備好了嗎？我們從最基本的問題開始：這段話究竟是誰說的？祂說話的姿態，又意味著什麼？</p>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 第二章：引導 ══ -->
+<div class="thread-line"></div>
+<div class="section-gap"></div>
+<div class="thread-line"></div>
+
+<div class="chapter">
+  <div class="card red">
+
+    <div class="card-header">
+      <div class="chapter-tag"><span class="num">2</span> Guide · 引導</div>
+      <h2 class="card-title">上帝不是在「建議」——祂是在立約</h2>
+      <p class="card-hook">「吩咐」這個字，在希伯來文裡重得像一道詔書。讀懂了它，你才知道亞當站在什麼樣的位置上。</p>
+    </div>
+
+    <div class="card-body">
+
+      <p>在我們真正「進入」這段經文之前，我想先請你注意一個字——一個幾乎被所有讀者跳過去的字。</p>
+
+      <p>中文聖經說：「耶和華神<strong>吩咐</strong>那人說……」</p>
+
+      <span class="depth-label deep-tag">📖 希伯來原文</span>
+
+      <div class="term-box">
+        <div class="term-original">וַיְצַו<br>wayṣaw</div>
+        <div class="term-desc">希伯來字根 צוה（tsavah）的「帶相繼連續語氣的 Qal 未完成式」。這不只是「說說而已」，而是帶有絕對法律效力的神聖主權宣告——命令、託付、差遣、授權、制定聖約約束，全部包含在這一個字裡。</div>
+      </div>
+
+      <p>這個字在舊約中的使用場合，幾乎都是君王向臣下頒布詔令、或神向百姓立定聖約的時刻。它不是朋友之間的建議，不是父親溫和的叮嚀——它是宗主國君王向附庸代理人正式頒下的聖約條款。</p>
+
+      <div class="highlight">
+        <strong>這意味著什麼？</strong>
+        亞當所處的位置，是一個「聖約附庸」的位置。他不是一個隨意漫步在美麗花園裡的遊人，而是一位被正式委任的聖約代理人——代表整個人類，站在神面前，接受一份攸關全人類命運的聖約委任。
+      </div>
+
+      <div class="scripture">
+        <p class="scripture-text">「園中各樣樹上的果子，你<em>都</em>可以吃……」</p>
+        <p class="scripture-ref">創世記 二：16（和合本修訂版）</p>
+      </div>
+
+      <span class="depth-label plain-tag">💡 白話說明</span>
+
+      <p>注意：命令的第一句，不是禁令，而是一道極其寬廣的「全面許可」。上帝先說的是：你可以盡情享用這一切。這個「隨意吃」在希伯來原文裡的語氣，甚至比中文翻譯還要更寬廣、更慷慨——幾乎是一種「敞開大門、盡情取用」的皇家款待姿態。</p>
+
+      <div class="analogy">
+        <span class="analogy-icon">👑</span>
+        這不是一個嚴苛的上司在設定績效考核。這更像是一位慷慨的君王，把整座富麗堂皇的宮殿交給一位代理人，說：「這裡所有的都是你的，好好管理它，我只有一條要求。」——禁令是在極大恩典的框架之內設立的，而不是在嚴苛管控之下的唯一例外。
+      </div>
+
+      <p>理解這個順序非常重要：神先給出九十九分的慷慨，才設下那一分的邊界。這個邊界，不是神吝嗇的證明，而是神對這段聖約關係嚴肅性的宣告。</p>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 第三章：破題 ══ -->
+<div class="thread-line"></div>
+<div class="section-gap"></div>
+<div class="thread-line"></div>
+
+<div class="chapter">
+  <div class="card deep">
+
+    <div class="card-header">
+      <div class="chapter-tag"><span class="num">3</span> Unveil · 破題</div>
+      <h2 class="card-title">亞當是園丁，還是大祭司？</h2>
+      <p class="card-hook">「修理、看守」——這兩個字在希伯來聖經裡，從來不是農業術語。它們是祭司在聖殿裡的職稱。</p>
+    </div>
+
+    <div class="card-body">
+
+      <p>創世記二章十五節說，神將人安置在伊甸園，「使他修理，看守」。大多數人讀到這裡，腦中浮現的畫面是：一個人拿著鋤頭，在花園裡鋤草施肥。</p>
+
+      <p>但如果你懂得希伯來文，你會立刻停下來，因為這兩個字的組合，在舊約聖經裡觸發了一個非常特定的「記憶迴路」。</p>
+
+      <span class="depth-label deep-tag">📖 雙重祭司術語</span>
+
+      <div class="term-box">
+        <div class="term-original">עָבַד<br>ʿāḇaḏ</div>
+        <div class="term-desc">「修理」。字根意義包含：工作、服事、<strong>敬拜</strong>。在利未記與民數記中，這個字專門用於描述祭司在聖所中的「服事」職責。</div>
+      </div>
+
+      <div class="term-box">
+        <div class="term-original">שָׁמַר<br>šāmar</div>
+        <div class="term-desc">「看守」。意義包含：保護、守衛、謹守規條、<strong>防範不潔之物侵入聖所</strong>。同樣是祭司術語，尤其用於描述利未人在會幕四周的守衛職責（民數記三章7–8節）。</div>
+      </div>
+
+      <div class="highlight">
+        <strong>關鍵文本平行</strong>
+        當 ʿāḇaḏ 和 šāmar 在摩西五經中同時出現時，幾乎無一例外地用於描述利未祭司在會幕與聖殿中的職責（民數記三:7–8；十八:4；歷代志上二十三:32）。創世記二:15使用完全相同的詞組——這不是偶然，而是神學上刻意的聖所類比。
+      </div>
+
+      <p>這告訴我們一件顛覆性的事：伊甸園不是一座農場，而是人類歷史上的第一座聖所——第一座會幕、第一座聖殿。而亞當不是一個農夫，而是這座聖所的第一任大祭司。</p>
+
+      <div class="concentric">
+        <div class="concentric-ring r1">
+          <span class="ring-label">🌟 伊甸園的聖殿特徵</span>
+          坐落高地，入口朝東——與後來的耶路撒冷聖殿完全相同
+        </div>
+        <div class="concentric-ring r2">
+          <span class="ring-label">💎 園中的珍寶</span>
+          黃金、珍珠、紅瑪瑙——與聖殿裝飾的珍貴材料互相呼應
+        </div>
+        <div class="concentric-ring r4">
+          <span class="ring-label">📚 次經的見證</span>
+          《禧年書》八:19記載：「諾亞知道伊甸園乃是至聖所，是主居住的所在」
+        </div>
+        <div class="concentric-ring r3">
+          <span class="ring-label">⚔️ 基路伯的守衛</span>
+          被逐出後，神在東方設立基路伯——正是聖殿至聖所幔子上繡的圖案
+        </div>
+      </div>
+
+      <span class="depth-label plain-tag">💡 這對我們意味著什麼</span>
+
+      <p>當蛇進入伊甸園誘惑夏娃時，正在現場的亞當（創世記三章6節）沒有出手阻止。他不只是做了一個錯誤的飲食選擇——他身為大祭司，未能履行「看守聖所、防範不潔侵入」的神聖職責。這是瀆職，是失職，是整個聖所秩序的崩潰。</p>
+
+      <div class="big-quote">
+        亞當的失敗，不是一個農夫偷吃了不該吃的果子——而是一位祭司讓敵人長驅直入了至聖所。
+        <cite>— 聖殿神學的視角</cite>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 第四章：研究 ══ -->
+<div class="thread-line"></div>
+<div class="section-gap"></div>
+<div class="thread-line"></div>
+
+<div class="chapter">
+  <div class="card blue">
+
+    <div class="card-header">
+      <div class="chapter-tag"><span class="num">4</span> Research · 研究</div>
+      <h2 class="card-title">「分別善惡」的真正意思：那不是一顆蘋果的問題</h2>
+      <p class="card-hook">禁果代表的，是「誰有權定義對與錯」。當人伸手摘下它的那一刻，發生的不是一場飲食失誤，而是一場司法政變。</p>
+    </div>
+
+    <div class="card-body">
+
+      <p>這是整個故事裡最常被誤解的部分。人們問：難道上帝不希望人類聰明？不希望我們有智慧、能分辨是非嗎？</p>
+
+      <p>答案是：這完全不是那棵樹在說的事。</p>
+
+      <span class="depth-label deep-tag">📖 原文語義分析</span>
+
+      <div class="term-box">
+        <div class="term-original">הַדַּעַת<br>haddāʿaṯ</div>
+        <div class="term-desc">「知道」——但這個希伯來字根 יָדַע（yāḏaʿ）強調的是「關係性的、經歷性的知曉」，而非單純的資訊掌握。這是透過切身涉入而獲得的知識。</div>
+      </div>
+
+      <div class="term-box">
+        <div class="term-original">טוֹב וָרָע<br>ṭōḇ wārāʿ</div>
+        <div class="term-desc">「善與惡」——在古代近東修辭學中，這是一種「兩極對立修辭法」（Merism），以兩個極端代表完整的全體。類似於我們說「從頭到腳」代表整個身體。「善與惡」在此代表的是「一切的道德判斷」。</div>
+      </div>
+
+      <div class="highlight">
+        <strong>古代法庭背景</strong>
+        在聖經其他地方，「知道善惡」是一個帶有強烈司法色彩的短語，指的是「制定法律、判定對錯的最高裁判權」。撒母耳記下十四章17節稱讚大衛像神的使者能「辨識善惡」，指的是他代表神行使最高審判權。列王紀上三章9節，所羅門求一顆「辨識善惡」的心——是為了公正裁決百姓，不是為了「變聰明」。
+      </div>
+
+      <p>所以，分別善惡樹代表的，不是知識或智慧——而是「<strong>誰有資格定義什麼是對、什麼是錯</strong>」這個根本性的主權問題。</p>
+
+      <div class="scripture">
+        <p class="scripture-text">「只是分別善惡樹上的果子，你不可吃……」</p>
+        <p class="scripture-ref">創世記 二：17</p>
+      </div>
+
+      <span class="depth-label plain-tag">💡 用現代語言說</span>
+
+      <div class="analogy">
+        <span class="analogy-icon">⚖️</span>
+        上帝對亞當說的，等於是：「我把整個世界交給你管理。但有一件事——『定義對與錯的立法權』——這個必須留在我這裡。因為只有創造萬物、完全公義的我，才有資格做那個終極定義者。只要你信任我的定義、按照我的標準生活，你就能在真正的自由中蓬勃生長。」
+      </div>
+
+      <p>當人類伸手摘下那顆果子，他們在說的不是「我想要更多知識」，而是：「我不再接受你的定義。從今以後，什麼是對、什麼是錯，由我自己說了算。」</p>
+
+      <div class="big-quote">
+        這不是一場飲食失誤。這是一場針對神聖法庭的司法政變。
+        <cite>— 從古代近東法律語境重讀創世記</cite>
+      </div>
+
+      <p>這種將自我神化——讓自己成為道德定義者——的衝動，神學家稱之為追求「道德自主性」（Moral Autonomy）。這不只是亞當和夏娃的故事，這是每一個人每一天都在面對的誘惑。</p>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 第五章：深論 ══ -->
+<div class="thread-line"></div>
+<div class="section-gap"></div>
+<div class="thread-line"></div>
+
+<div class="chapter">
+  <div class="card purple">
+
+    <div class="card-header">
+      <div class="chapter-tag"><span class="num">5</span> Deep Dive · 深論</div>
+      <h2 class="card-title">「必定死」：一紙死刑判決書，與一個隱藏的應許</h2>
+      <p class="card-hook">亞當吃了果子，卻活到了九百多歲——上帝的話失靈了嗎？不。死亡那天就已發生了。只是，在審判的裂縫中，神藏了一條出路。</p>
+    </div>
+
+    <div class="card-body">
+
+      <span class="depth-label deep-tag">📖 希伯來死刑公式</span>
+
+      <div class="term-box">
+        <div class="term-original">מוֹת תָּמוּת<br>môṯ tāmûṯ</div>
+        <div class="term-desc">字面意思：「死你將死」。Qal 絕對不定詞在前、同字根 Qal 未完成式在後的疊加結構，在希伯來律法文獻中是經典的「死刑宣判公式」，強調法律判決的必然性與不可迴避性。與列王紀上二章37節所羅門對示每的警告句式完全相同。</div>
+      </div>
+
+      <p>神的警告不是在說「你可能會感到不舒服」，而是用古代近東法庭語言，正式宣告了聖約違反的最高刑罰：死亡。</p>
+
+      <div class="highlight">
+        <strong>為什麼亞當沒有立刻倒下？</strong>
+        「死亡」在聖經神學中包含三個層次，它們在「吃的那天」同時被觸發。第一是靈性死亡（與神的關係即時斷裂）；第二是身體死亡（進入衰老與消亡的必然軌道）；第三是永恆的死亡（最終的審判結局）。肉體的消亡是慢動作的，但靈魂的「拔插頭」是瞬間的。
+      </div>
+
+      <div class="analogy">
+        <span class="analogy-icon">🔌</span>
+        這就像一盞精美的水晶燈，當插頭被拔掉的那一秒，法律上它就已經與電源隔絕、失去生機了。燈泡裡的餘溫還能維持一陣子，但熄滅只是時間問題。亞當那天，靈魂的插頭被拔掉了。九百年的壽命，是那根慢慢冷卻的燈絲。
+      </div>
+
+      <div class="scripture">
+        <p class="scripture-text">「耶和華神用皮子做衣服，給他們穿。」</p>
+        <p class="scripture-ref">創世記 三：21</p>
+      </div>
+
+      <p>然後是那個叫人窒息的細節：神在宣判詛咒之前，先說了一句話——蛇的頭要被女人的後裔所傷。神學家稱這句話為「原始福音」（Proto-Evangelium），是整部救贖史的第一個預告。</p>
+
+      <p>接著，神用動物的皮子為他們製作衣服。這不是一個小細節。要有皮子，就必須有無辜的生命死亡、流血。神在宣告審判的同時，親自示範了救贖的機制：必須有人替他們死，才能遮蓋他們的羞恥。</p>
+
+      <div class="concentric">
+        <div class="concentric-ring r1">
+          <span class="ring-label">⚖️ 審判：靈性死亡立即生效</span>
+          羞恥感、躲避神、與神關係的斷裂——當天就發生了
+        </div>
+        <div class="concentric-ring r2">
+          <span class="ring-label">🌱 恩典：原始福音同步宣告</span>
+          「女人的後裔將傷蛇的頭」——審判話語中藏著救贖的種子
+        </div>
+        <div class="concentric-ring r4">
+          <span class="ring-label">🩸 代贖：皮子衣服的預示</span>
+          無辜生命的死亡遮蓋了羞恥——預表了羔羊的犧牲
+        </div>
+        <div class="concentric-ring r3">
+          <span class="ring-label">⚔️ 聖殿：基路伯守衛東方入口</span>
+          被逐出的人在東門外獻祭——原型祭壇，聖殿祭祀制度的雛形
+        </div>
+      </div>
+
+      <div class="big-quote">
+        神的審判從不單獨出現。每一次宣判，祂同時也在親手縫製一件恩典的外衣。
+        <cite>— 創世記三章的神學結構</cite>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 第六章：結論與溫馨 ══ -->
+<div class="thread-line"></div>
+<div class="section-gap"></div>
+<div class="thread-line"></div>
+
+<div class="chapter">
+  <div class="card final">
+
+    <div class="card-header">
+      <div class="chapter-tag"><span class="num">6</span> Epilogue · 結論與溫馨</div>
+      <h2 class="card-title">末後的亞當，替我們考了滿分</h2>
+      <p class="card-hook">第一個亞當在完美的園子裡失敗了。末後的亞當在荒涼的曠野中勝利了。而祂把那張滿分成績單，寫上了你的名字。</p>
+    </div>
+
+    <div class="card-body">
+
+      <p>我們花了五篇的篇幅，仔細看了那幾節經文藏著什麼——聖所的結構、聖約的法理、分別善惡樹的司法意涵、死亡的三個層次、審判中的恩典。</p>
+
+      <p>現在，讓我們把整幅圖拼起來，看見那個讓一切意義貫通的核心：聯邦首領的更迭。</p>
+
+      <div class="scripture">
+        <p class="scripture-text">「如此，經上也是這樣記著說：首先的人亞當成了有生命的活人；末後的亞當成了賜生命的靈。」</p>
+        <p class="scripture-ref">哥林多前書 十五：45</p>
+      </div>
+
+      <p>保羅在羅馬書五章說，亞當是「那將要來之人的預表」（希臘文：τύπος，typos）。亞當不只是一個個人，他是全人類的聯邦代表——在行為之約的考驗中，他的成敗牽連著每一個將要出生的人。</p>
+
+      <p>他失敗了。他的罪債與墮落的本性，按照法律代表制的原則，歸入了所有他所代表的後裔——也就是我們所有人。</p>
+
+      <div class="highlight">
+        <strong>但這不是故事的結局</strong>
+        神在漫長的歷史中預備了第二位代表——末後的亞當，耶穌基督。祂進入人類的歷史，在完全相反的環境中，重演了那場考驗。第一個亞當在完美的伊甸園裡失敗；末後的亞當在荒涼、飢餓、魔鬼瘋狂試探的曠野中——勝利了。
+      </div>
+
+      <p>基督的救贖包含了兩個完美的司法維度：</p>
+
+      <p>第一，祂的「主動順服」——一生完美無瑕地履行了神對律法的一切要求，替祂的子民贏得了行為之約中所應許的永生獎賞。第二，祂的「被動順服」——甘願走上十字架，代替子民承受了那個創世記裡宣告的「môṯ tāmûṯ」——必定死。</p>
+
+      <div class="big-quote">
+        信徒的罪歸入基督，由祂在十架上代為償清；基督一生的完美義行，歸入信徒，使他們在神面前被宣告為義。
+        <cite>— 雙重歸入的奇妙交換</cite>
+      </div>
+
+      <p>這就像是：在一場攸關生死的考試中，我們的代表亞當考了零分，那個零分成了我們每個人的成績。但末後的亞當來了，祂考了滿分，然後做了一件世界上從來沒有發生過的事——祂把那張滿分成績單，白白地寫上了所有願意信靠祂的人的名字。</p>
+
+      <div class="highlight">
+        <strong>你現在所擁有的，比未墮落前的亞當還要多</strong>
+        亞當在伊甸園的義，是隨時可能因為不順服而失落的「受造之義」。而今天在基督裡的你，不只罪得赦免，更有聖靈永久居住在心中——你所站立的地位，是永不失落的。神聖的應許已經藉著比亞當更完美的代表，被「確認」了。
+      </div>
+
+      <p>創世記二章那幾節經文，藏著的不只是一個遠古的故事。它藏著的是：一位慷慨的神，如何在最嚴苛的法律框架中，親自設計出一條讓罪人可以回家的路——從第一句「隨意吃」的恩典，到最後一件動物皮子的代贖，再到那個在曠野說「不」的末後亞當。</p>
+
+      <div class="big-quote">
+        整部聖經，是一個父親費盡心機把孩子接回家的故事。而伊甸園，是這個故事的第一頁。
+        <cite>— 創世記二章的永恆回響</cite>
+      </div>
+
+      <p>如果你讀到這裡，心裡有什麼被觸動的——那可能就是祂的聲音。歡迎你帶著你所有的問題，繼續往下讀那本書。</p>
+
+    </div>
+  </div>
+</div>
+
+<div class="thread-line"></div>
+
+<footer class="site-footer">
+  伊甸的命令 · The Eden Command · 創世記深度系列
+</footer>
+
+</body>
+</html>
