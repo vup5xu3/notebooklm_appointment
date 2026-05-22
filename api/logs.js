@@ -1,5 +1,5 @@
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://lhnviqsadfxpvwwmsubz.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobnZpcXNhZGZ4cHZ3d21zdWJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDQwMjYsImV4cCI6MjA5NDkyMDAyNn0.xzUOev3w-IxFB3Z5fjatYJef2VUWqJLMI8RUJT98OzM';
 
 async function supabase(path, method = 'GET', body = null) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
